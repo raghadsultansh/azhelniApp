@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useContext,
-  useEffect,
-  useState as ReactState,
-} from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,38 +6,41 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Animatable from "react-native-animatable";
 import { AuthContext } from "../context/AuthContext";
+import api from "../services/api";
 
-const LoginScreen = ({ navigation }) => {
+const RegisterScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
-  const [email, setEmail] = ReactState("");
-  const [password, setPassword] = ReactState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showLogo, setShowLogo] = useState(false);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!email || !password) {
       Alert.alert("خطأ", "يرجى إدخال الإيميل وكلمة السر");
       return;
     }
-    await login(email, password);
 
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Tabs" }],
-    });
+    try {
+      const res = await api.post("/api/auth/register", { email, password });
+      const user = res.data;
+      login(user.email, password);
+    } catch (err) {
+      console.log("Registration error:", err);
+      Alert.alert("خطأ", "فشل التسجيل. تأكد من أن البريد غير مستخدم.");
+    }
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowLogo(true), 2500);
+    const timer = setTimeout(() => setShowLogo(true), 10);
     return () => clearTimeout(timer);
   }, []);
 
@@ -64,19 +62,10 @@ const LoginScreen = ({ navigation }) => {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
           >
-            <Animatable.Text
-              animation="fadeInDown"
-              duration={1500}
-              style={styles.catchphrase}
-            >
-              ماتدري وش تاكل؟
-            </Animatable.Text>
+            <Text style={styles.catchphrase}>مستخدم جديد؟ نورتنا ✨</Text>
 
             {showLogo ? (
-              <Animatable.Image
-                animation="fadeIn"
-                duration={1200}
-                delay={200}
+              <Image
                 source={require("../assets/images/Logo.png")}
                 style={styles.logo}
               />
@@ -85,7 +74,7 @@ const LoginScreen = ({ navigation }) => {
             )}
 
             <View style={styles.form}>
-              <Text style={styles.title}>وش تنتظر؟ سجل وخلنا نبدأ</Text>
+              <Text style={styles.title}>سجل دخولك وازهلني</Text>
 
               <TextInput
                 style={styles.input}
@@ -106,12 +95,12 @@ const LoginScreen = ({ navigation }) => {
                 textAlign="right"
               />
 
-              <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>يلا نبدأ</Text>
+              <TouchableOpacity style={styles.button} onPress={handleRegister}>
+                <Text style={styles.buttonText}>سجلني</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-                <Text style={styles.link}>ما عندك حساب؟ سجل معنا</Text>
+              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                <Text style={styles.link}>عندك حساب؟ ادخل من هنا</Text>
               </TouchableOpacity>
             </View>
             <Text
@@ -132,7 +121,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-export default LoginScreen;
+export default RegisterScreen;
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -149,7 +138,7 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   catchphrase: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
@@ -174,12 +163,11 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   input: {
-    borderWidth: 2,
-    borderColor: "#c",
-    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
     padding: 12,
     marginBottom: 15,
-    shadowRadius: 100,
     fontSize: 16,
     backgroundColor: "#fff",
   },
